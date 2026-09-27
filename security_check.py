@@ -58,7 +58,7 @@ def scan_prompt(prompt): #scans input and matches it with regex rules :)
 
     return issues
 
-def sort_prompt(issues):
+def classify_prompt(issues):
     if not issues:
         return "public";
 
@@ -72,5 +72,8 @@ def sort_prompt(issues):
     if "confidential" in classifications:
         return "confidential"
     return "public";
+
+def evaluate_prompt():
+    print("");
 
 
