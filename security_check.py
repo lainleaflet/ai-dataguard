@@ -5,7 +5,7 @@ DETECTION_RULES = [ #regex rules to detect sensitive info in user inputs :)
         "name": "ssn",
         "category": "PII",
         "severity" : "high", 
-        "pattern": r"\b\d{3}-\d{2}-\d{4}\b",
+        "pattern": r"\b\d{3}-\d{2}-\d{4}\b", #regex for ssn! look for 3 digits, a dash, 2 digits, a dash, then 4 digits.
         "classification": "restricted"
     },
     {
@@ -13,8 +13,8 @@ DETECTION_RULES = [ #regex rules to detect sensitive info in user inputs :)
         "category": "credentials",
         "severity" : "high", 
         "pattern": (
-                r"\b(?:sk-[A-Za-z0-9_-]{16,}"
-                r"|AKIA[A-Z0-9]{16})\b"
+                r"\b(?:sk-[A-Za-z0-9_-]{16,}" 
+                r"|AKIA[A-Z0-9]{16})\b" # specifically for common AWS access keys
             ),
         "classification": "restricted"
     },
@@ -57,3 +57,20 @@ def scan_prompt(prompt): #scans input and matches it with regex rules :)
             })
 
     return issues
+
+def sort_prompt(issues):
+    if not issues:
+        return "public";
+
+    classifications = [ 
+        issue["classification"]
+        for issue in issues
+    ]
+
+    if "restricted" in classifications: #so if there is even a single restricted or confidential element, we will classify the entire thing as such. 
+        return "restricted"
+    if "confidential" in classifications:
+        return "confidential"
+    return "public";
+
+
