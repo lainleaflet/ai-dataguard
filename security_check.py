@@ -1,6 +1,6 @@
 import re
 
-DETECTION_RULES = [
+DETECTION_RULES = [ #regex rules to detect sensitive info in user inputs :)
     {
         "name": "ssn",
         "category": "PII",
@@ -39,3 +39,21 @@ DETECTION_RULES = [
         "classification": "confidential"
     }
 ]
+
+def scan_prompt(prompt): #scans input and matches it with regex rules :)
+    issues = []
+    for rule in DETECTION_RULES:
+        matches = re.finditer(rule["pattern"], prompt, flags=re.IGNORECASE)
+
+        for match in matches: 
+            issues.append({
+                "name": rule["name"],
+                "category": rule["category"],
+                "severity": rule["severity"],
+                "classification": rule["classification"],
+                "matched_text": match.group(),
+                "start": match.start(),
+                "end": match.end(),
+            })
+
+    return issues
