@@ -8,6 +8,7 @@ DETECTION_RULES = [ #regex rules to detect sensitive info in user inputs :)
         "pattern": r"\b\d{3}-\d{2}-\d{4}\b", #regex for ssn! look for 3 digits, a dash, 2 digits, a dash, then 4 digits.
         "classification": "restricted"
     },
+    
     {
         "name": "potential api key",
         "category": "credentials",
@@ -63,8 +64,7 @@ def classify_prompt(issues):
         return "public";
 
     classifications = [ 
-        issue["classification"]
-        for issue in issues
+        issue["classification"] for issue in issues
     ]
 
     if "restricted" in classifications: #so if there is even a single restricted or confidential element, we will classify the entire thing as such. 
@@ -73,7 +73,34 @@ def classify_prompt(issues):
         return "confidential"
     return "public";
 
-def evaluate_prompt():
-    print("");
+def evaluate_prompt(classification):
+    if classification == "restricted":
+        print("prompt contains restricted information.")
+        return "block";
+    elif classification == "confidential":
+        print("prompt contains confidential information.")
+        return "redact";
+
+    return "allow";
+
+def censor_prompt(prompt, issues):
+    censored_prompt = prompt;
+    for issue in issues:
+        start = issue["start"]
+        end = issue["end"]
+        censored_prompt = censored_prompt[:start] + "[REDACTED: " + issue["name"] + "]" + censored_prompt[end:];
+    return censored_prompt;
+
+def analyze_prompt(prompt):
+    issues = scan_prompt(prompt)
+    classification = classify_prompt(issues)
+    action = evaluate_prompt(classification)
+    censored_prompt = censor_prompt(prompt, issues)
+    return {
+        "action": action,
+        "censored_prompt": censored_prompt,
+        "issues": issues,
+        "classification": classification 
+    }
 
 
