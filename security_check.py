@@ -8,7 +8,7 @@ DETECTION_RULES = [ #regex rules to detect sensitive info in user inputs :)
         "pattern": r"\b\d{3}-\d{2}-\d{4}\b", #regex for ssn! look for 3 digits, a dash, 2 digits, a dash, then 4 digits.
         "classification": "restricted"
     },
-    
+
     {
         "name": "potential api key",
         "category": "credentials",
@@ -44,10 +44,10 @@ DETECTION_RULES = [ #regex rules to detect sensitive info in user inputs :)
 def scan_prompt(prompt): #scans input and matches it with regex rules :)
     issues = []
     for rule in DETECTION_RULES:
-        matches = re.finditer(rule["pattern"], prompt, flags=re.IGNORECASE)
+        matches = re.finditer(rule["pattern"], prompt, flags=re.IGNORECASE) #re.finditer() returns an iterator type. 
 
-        for match in matches: 
-            issues.append({
+        for match in matches: #for each iterator...
+            issues.append({ # we append each issue. when we do this, the iterator is converted to a string. 
                 "name": rule["name"],
                 "category": rule["category"],
                 "severity": rule["severity"],
@@ -63,8 +63,8 @@ def classify_prompt(issues):
     if not issues:
         return "public";
 
-    classifications = [ 
-        issue["classification"] for issue in issues
+    classifications = [ # creating an array of classifications from our gathered issues :)
+        issue["classification"] for issue in issues 
     ]
 
     if "restricted" in classifications: #so if there is even a single restricted or confidential element, we will classify the entire thing as such. 
@@ -81,24 +81,27 @@ def evaluate_prompt(classification):
         print("prompt contains confidential information.")
         return "redact";
 
-    return "allow";
+    return "allow"; 
 
-def censor_prompt(prompt, issues):
-    censored_prompt = prompt;
+def redact_prompt(prompt, issues):
+    redacted_prompt = prompt;
     for issue in issues:
         start = issue["start"]
         end = issue["end"]
-        censored_prompt = censored_prompt[:start] + "[REDACTED: " + issue["name"] + "]" + censored_prompt[end:];
-    return censored_prompt;
+        redacted_prompt = redacted_prompt[:start] + "[REDACTED: " + issue["name"] + "]" + redacted_prompt[end:];
+    return redacted_prompt;
 
 def analyze_prompt(prompt):
     issues = scan_prompt(prompt)
     classification = classify_prompt(issues)
     action = evaluate_prompt(classification)
-    censored_prompt = censor_prompt(prompt, issues)
+
+    #at the moment we're redacting every prompt until i can figure out how to block prompts. 
+    redacted_prompt = redact_prompt(prompt, issues)
     return {
+        "prompt": prompt,
         "action": action,
-        "censored_prompt": censored_prompt,
+        "redacted_prompt": redacted_prompt,
         "issues": issues,
         "classification": classification 
     }
