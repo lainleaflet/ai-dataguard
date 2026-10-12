@@ -1,6 +1,20 @@
 import streamlit as st
 from security_check import analyze_prompt
 
+def format_results(result):
+    issues = result.get("issues", [])
+    issue_summary = ""
+    # for issue in issues:
+    #     issue_summary += f", {issue['name']}\n"
+    issue_summary = ", ".join([issue['name'] for issue in issues])
+    return {
+        "prompt": result.get("prompt"),
+        "action": result.get("action"),
+        "redacted_prompt": result.get("redacted_prompt"),
+        "issues": issue_summary,
+        "classification": result.get("classification")
+    }
+
 st.set_page_config(
     page_title="ai dataguard",
     page_icon="🛡️",
@@ -25,7 +39,7 @@ if st.button("analyze prompt"):
     if prompt.strip(): # .strip() helps with removing beginning whitespace, tabs, newlines from beginning and end of text :)
         result = analyze_prompt(prompt);
         st.session_state["result"] = result
-        st.session_state["history"].append(result)
+        st.session_state["history"].append(format_results(result))
 
     else:
         st.write("please enter a prompt.");
@@ -34,3 +48,4 @@ if st.session_state["history"]:
     st.divider()
     st.header("history of analyzed prompts")
     st.dataframe(st.session_state["history"], width="stretch")
+
